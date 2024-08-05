@@ -2,7 +2,7 @@
 * text=auto
 
 *.ipynb linguist-language=python
-*.csv linguist-language=latex
-*.pdf linguist-language=latex
+*.csv linguist-language =latex
+*.pdf linguist-language = latex
 
 
