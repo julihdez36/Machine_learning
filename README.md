@@ -2,14 +2,14 @@
 
 This repository contains various materials for exploring machine learning algorithms. It is organized into two main folders:
 
-1. Introduction to python
+### 1. Introduction to python
  - Introduction (overview)
  - Numpy (overview)
  - Pandas (overview)
  - Matplotlib (overview)
  - Seaborn (overview)
  
-2. Machine learning algorithms
+### 2. Machine learning algorithms
 - Introduction
 - Naive Bayes Classification
 - Linear regression
@@ -18,5 +18,5 @@ This repository contains various materials for exploring machine learning algori
 - Principal componen analysis
 - K-means clustering
 
-
+These materials are based on [Python Data Science Handbook](https://jakevdp.github.io/PythonDataScienceHandbook/index.html)
  
