@@ -93,7 +93,26 @@ y = iris.loc[:,'species']
 # El criterio de proximidad será la distancia euclidiana
 
 import math
+from collections import Counter
+
 
 # Calcular distancia euclidiana
 def euclidean_distance(p1, p2):
     return math.sqrt(sum((a - b) ** 2 for a, b in zip(p1, p2)))
+
+# Predecir etiqueta para un punto de prueba
+def predict_one(x_train, y_train, x_test, k):
+    # Calcular todas las distancias del punto de prueba a los puntos de entrenamiento
+    distances = [(euclidean_distance(x_test, x), y) for x, y in zip(x_train, y_train)]
+    
+    # Ordenar por distancia y elegir los k vecinos más cercanos
+    k_neighbors = sorted(distances, key=lambda x: x[0])[:k]
+    
+    # Extraer las etiquetas de los vecinos y votar la clase mayoritaria
+    k_labels = [label for _, label in k_neighbors]
+    most_common = Counter(k_labels).most_common(1)[0][0]
+    return most_common
+
+# Predecir etiquetas para un conjunto de prueba
+def predict(x_train, y_train, x_test, k):
+    return [predict_one(x_train, y_train, x, k) for x in x_test]
