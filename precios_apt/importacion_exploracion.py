@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Nov  2 00:31:06 2025
-
-@author: Julian
-"""
 
 #%% Importación de datos y módulos
 
@@ -326,6 +321,4 @@ X = df[['area', 'habitaciones','banos', 'administracion','parqueaderos',
        'distancia_parque_m', 'zona_bogota', 'deportivas','antiguedad']]
 
 
-X.dropna(inplace = True)
-
-X.isna().sum()
+# Falta revisar antiguedad, zona_bogota, administracion
