@@ -129,4 +129,52 @@ len(out)
 
 df = df[(df.precio_venta > lower) & (df.precio_venta < upper)]
 
-#%%
+plt.figure(figsize= (9,4))
+sns.kdeplot(data =df, x = 'precio_venta')
+
+df['tipo_propiedad'].value_counts()
+
+# Dada la muestra, solamente reviaremos apartamentos
+df = df[df.tipo_propiedad == 'APARTAMENTO']
+
+plt.figure(figsize= (9,4))
+sns.kdeplot(data =df, x = 'precio_venta')
+
+#%% Matriz de caracteristicas
+
+df.columns
+
+localidades = df.localidad.value_counts()
+
+len(localidades) # 19 localidades
+
+plt.figure(figsize= (9,4))
+sns.barplot(x = localidades.index, y = localidades.values,
+            palette= 'viridis')
+plt.title('Apartamentos por localidad')
+plt.xlabel('Localidades')
+plt.ylabel('Frecuencia')
+plt.xticks(rotation = 50, fontsize = 8)
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize= (9,4))
+sns.boxplot(data = df, y = 'precio_venta', x = 'localidad', 
+            palette= 'viridis')
+plt.title('Precio de apartamentos por localidad')
+plt.xlabel('Localidades')
+plt.ylabel('Precio de venta')
+plt.xticks(rotation = 50, fontsize = 8)
+plt.tight_layout()
+plt.show()
+
+
+
+df.groupby('localidad')['precio_venta'].mean()
+
+df.columns
+
+X = df['tipo_propiedad']
+
+
+df['tipo_propiedad'].value_counts()
