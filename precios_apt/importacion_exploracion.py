@@ -13,7 +13,6 @@ import seaborn as sns
 # URL del archivo JSON en GitHub
 url = "https://github.com/builker-col/bogota-apartments/releases/download/v2.0.0-august.2-2024/processed_v2.0.0_august_2_2024.json"
 
-# 1. Método Rápido con Pandas
 try:
     df = pd.read_json(url)
     print("Cargado correctamente con pandas!")
@@ -48,28 +47,6 @@ df.parqueaderos = pd.to_numeric(df.parqueaderos, errors= 'coerce')
 df.estrato = pd.to_numeric(df.estrato, errors= 'coerce')
 
 df.shape #(27583, 46)
-
-# Columnas de fechas
-
-# df['datetime'] = pd.to_datetime(df['datetime'])
-
-# df.datetime.iloc[30853:30858]
-# df.datetime.iloc[30855] = df.datetime.iloc[30854]
-
-# df.datetime.iloc[38780:38783]
-# df.datetime.iloc[38781] = df.datetime.iloc[38780]
-
-# df['datetime'] = pd.to_datetime(df['datetime'])
-
-
-# df['last_view'] = pd.to_datetime(df['last_view'])
-
-# df.last_view.iloc[30853:30857]
-# df.last_view.iloc[30855] = df.last_view.iloc[30854]
-# df.last_view.iloc[38781] = df.last_view.iloc[38780]
-
-# df['last_view'] = pd.to_datetime(df['last_view'])
-
 
 #%% Análisis exploratorio (EDA)
 
@@ -322,3 +299,5 @@ X = df[['area', 'habitaciones','banos', 'administracion','parqueaderos',
 
 
 # Falta revisar antiguedad, zona_bogota, administracion
+
+#%% Estimación del modelo de regresión lineal
