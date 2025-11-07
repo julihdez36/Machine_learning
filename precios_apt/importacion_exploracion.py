@@ -76,6 +76,7 @@ plt.figure(figsize=(10, 5))
 sns.boxplot(x='precio_venta', data=df)
 plt.title('Precio de venta de apartamentos en Bogotá')
 plt.xlabel('Precio de venta')
+plt.show()
 
  
 def  Tukey_method(x, k = 1.5):
@@ -101,6 +102,7 @@ df = df[(df.precio_venta > lower) & (df.precio_venta < upper)]
 
 plt.figure(figsize= (9,4))
 sns.kdeplot(data =df, x = 'precio_venta')
+plt.show()
 
 # Dada la muestra, solamente reviaremos apartamentos
 
@@ -110,6 +112,8 @@ df = df[df.tipo_propiedad == 'APARTAMENTO']
 
 plt.figure(figsize= (9,4))
 sns.kdeplot(data =df, x = 'precio_venta')
+plt.show()
+
 
 #%% Matriz de caracteristicas
 
@@ -222,6 +226,7 @@ sns.barplot(
 plt.title('Cantidad de apartamentos cerca de parques en Bogotá por localidad (<= 500m)')
 plt.xlabel('Cantidad de apartamentos')
 plt.ylabel('Localidad')
+plt.show()
 
 # Cercania a estaciones de TM
 
