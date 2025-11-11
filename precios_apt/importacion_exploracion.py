@@ -2,10 +2,9 @@
 
 #%% Importación de datos y módulos
 
-import pandas as pd
-import numpy as np
+import pandas as pd # DF - PS
+import numpy as np # Array
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import seaborn as sns
 
 # https://github.com/builker-col/bogota-apartments/tree/master/data/processed
