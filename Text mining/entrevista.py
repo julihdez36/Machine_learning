@@ -63,7 +63,7 @@ stop_words = set(stopwords.words('spanish'))
 
 muletillas = ['pues', 'digamos', 'ejemplo', 'entonces', 'bueno', 'después', 'ahorita','chicos',
               'daniel','decir','gracias','ser','si','obviamente','cada','aquí','siempre','cosas',
-              'entreguemos','pone','prestado','pido','veces']
+              'entreguemos','pone','prestado','pido','veces', 'digamis','ahorita','diré']
 stop_words.update(muletillas)
 
 
@@ -75,211 +75,131 @@ tokens_filtrados = [t for t in tokens if t.isalpha() and t not in stop_words]
 conteo = Counter(tokens_filtrados)
 print(conteo.most_common(20))
 
-# Wordcloud
+#%% Wordcloud
 
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 wordcloud = WordCloud(width=800, height=400, background_color='white').generate(" ".join(tokens_filtrados))
 plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis("off")
-plt.show()
-
-# Longitud promedio de respuestas por apartado
-
-df['longitud'] = df['respuesta'].apply(lambda x: len(x.split()))
-print(df.groupby('seccion')['longitud'].mean())
-
-# Análisis de sentiemiento
-
-positivo = ['bueno','adecuado','satisfactorio','eficiente','excelente','positivo']
-negativo = ['malo','deficiente','inadecuado','insuficiente','problema','negativo']
-
-def sentimiento_basico(texto):
-    t = texto.lower().split()
-    pos = sum(w in positivo for w in t)
-    neg = sum(w in negativo for w in t)
-    return (pos - neg) / max(len(t), 1)
-
-df['sentimiento'] = df['respuesta'].apply(sentimiento_basico)
-print(df.groupby('seccion')['sentimiento'].mean())
-
-
-# Numero de respuestas por seccion
-
-import matplotlib.pyplot as plt
-
-conteo_secciones = df['seccion'].value_counts()
-
-plt.figure(figsize=(8,4))
-conteo_secciones.plot(kind='bar', color='skyblue')
-plt.title('Cantidad de respuestas por sección')
-plt.ylabel('Frecuencia')
-plt.xticks(rotation=45)
 plt.tight_layout()
 plt.show()
 
 
-# Longitud promedio por sección
-
-longitud = df.groupby('seccion')['respuesta'].apply(lambda x: x.str.len().mean())
-
-plt.figure(figsize=(8,4))
-longitud.sort_values().plot(kind='barh', color='lightgreen')
-plt.title('Longitud promedio de las respuestas por sección')
-plt.xlabel('Número promedio de caracteres')
-plt.show()
-
-# Análisis de frecuencia de palabras por sección
-
-from sklearn.feature_extraction.text import CountVectorizer
-import seaborn as sns
-import pandas as pd
-
-
-list(stop_words)
-
-vectorizer = CountVectorizer(stop_words=list(stop_words), max_features=15)
-X = vectorizer.fit_transform(df['respuesta'])
-frecuencias = pd.DataFrame(X.toarray(), columns=vectorizer.get_feature_names_out())
-frecuencias['seccion'] = df['seccion']
-
-top_palabras = frecuencias.groupby('seccion').mean().T
-
-plt.figure(figsize=(10,6))
-sns.heatmap(top_palabras, cmap='YlGnBu')
-plt.title('Palabras más frecuentes por sección')
-plt.xlabel('Sección')
-plt.ylabel('Palabras')
-plt.show()
-
-# Análisis de coocurrencias (palabras que aparecen juntas)
-
-from itertools import combinations
 from collections import Counter
-import networkx as nx
 
-# Tokeniza y limpia
-df['tokens'] = df['respuesta'].str.lower().str.split()
 
-# Calcula coocurrencias
-pares = []
-for tokens in df['tokens']:
-    pares.extend(combinations(sorted(set(tokens)), 2))
+# Contar frecuencias
+freq = Counter(tokens_filtrados)
+top_palabras = freq.most_common(15)  # puedes cambiar el número
 
-conteo = Counter(pares)
-G = nx.Graph([ (a,b,{'weight':w}) for (a,b), w in conteo.items() if w > 3 ])
+# Convertir a DataFrame para graficar con seaborn
+df_top = pd.DataFrame(top_palabras, columns=['palabra', 'frecuencia'])
 
-plt.figure(figsize=(10,8))
-nx.draw_networkx(G, with_labels=True, node_size=300, font_size=8, edge_color='gray')
-plt.title("Red de coocurrencias (palabras que aparecen juntas)")
+# Gráfico
+plt.figure(figsize=(10,6))
+sns.barplot(x='frecuencia', y='palabra', data=df_top, palette='viridis')
+
+# Etiquetas encima de las barras
+for index, value in enumerate(df_top['frecuencia']):
+    plt.text(value + 0.3, index, str(value), va='center')
+
+# plt.title("Palabras más mencionadas", fontsize=14)
+plt.xlabel("Frecuencia", fontsize = 14)
+plt.ylabel("Palabra", fontsize = 14)
+plt.tight_layout()
+plt.grid(linestyle = '--')
 plt.show()
 
-# Análisis de diversidad léxica
 
-df['diversidad'] = df['texto'].apply(lambda x: len(set(x.split())) / len(x.split()))
-df.groupby('seccion')['diversidad'].mean().plot(kind='bar', color='coral')
-plt.title('Diversidad léxica por sección')
-plt.ylabel('Proporción de palabras únicas')
+#%% Longitud promedio de respuestas por apartado
+'''
+métrica es más “semántica”: mide cuánto habla el entrevistado por tema,
+ sin importar si las palabras son largas o cortas.
+'''
+
+df['longitud'] = df['respuesta'].apply(lambda x: len(x.split()))
+print(df.groupby('seccion')['longitud'].mean())
+
+
+plt.figure(figsize=(12, 6))
+sns.boxplot(x='longitud', y='seccion', data=df, palette="Set3")
+# plt.title("Distribución de longitud de respuestas por sección", fontsize = 18)
+plt.xlabel("Número de palabras", fontsize = 14)
+plt.ylabel("Sección", fontsize = 14)
+plt.tight_layout()
+plt.grid(linestyle = '--')
 plt.show()
 
-# Nubes de palabra por seccion
 
-from wordcloud import WordCloud
+#%% ================== TOP 10 PALABRAS POR SECCIÓN + HEATMAP ==================
 
-for seccion in df['seccion'].unique():
-    texto = ' '.join(df[df['seccion']==seccion]['respuesta'])
-    wc = WordCloud(stopwords=stop_words, background_color='white', width=800, height=400).generate(texto)
-    plt.figure(figsize=(8,4))
-    plt.imshow(wc, interpolation='bilinear')
-    plt.axis('off')
-    plt.title(f'Nube de palabras - {seccion}')
-    plt.show()
+import pandas as pd
+import nltk
+from collections import Counter
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Crear un DataFrame con palabra, frecuencia y sección
 
 
-# Similaridad de palabras
-
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.cluster import KMeans
-
-vectorizer = TfidfVectorizer(stop_words=stop_words)
-X = vectorizer.fit_transform(df['respuesta'])
-
-kmeans = KMeans(n_clusters=4, random_state=42)
-df['cluster'] = kmeans.fit_predict(X)
-
-sns.countplot(x='cluster', data=df)
-plt.title('Agrupamiento de respuestas por similitud textual')
-plt.show()
-
-# Métricas
-
-#%% ================== 1. MÉTRICAS AVANZADAS POR RESPUESTA ==================
-import numpy as np
-from scipy import stats
-
-# Longitud en caracteres y palabras
-df['caracteres'] = df['respuesta'].str.len()
-df['palabras_resp'] = df['respuesta'].apply(lambda x: len(nltk.word_tokenize(x)))
-
-# Complejidad léxica (TTR = Type-Token Ratio)
-def ttr(texto):
-    tokens = [t.lower() for t in nltk.word_tokenize(texto) if t.isalpha()]
-    return len(set(tokens)) / len(tokens) if tokens else 0
-df['ttr'] = df['respuesta'].apply(ttr)
-
-# Uso de muletillas personalizadas (cuenta cuántas veces aparecen)
-df['muletillas'] = df['respuesta'].str.lower().str.count('|'.join(muletillas))
-
-# Velocidad de habla (palabras por minuto) → si tienes duración de entrevista
-# df['ppm'] = df['palabras_resp'] / (duracion_minutos_por_respuesta)
-
-print("Métricas avanzadas añadidas:")
-print(df[['seccion', 'longitud', 'caracteres', 'ttr', 'muletillas']].head())
-
-# Top de palabras por sección
-
-#%% ================== 2. TOP 10 PALABRAS POR SECCIÓN (tabla bonita) ==================
-top_por_seccion = {}
+# Crear una lista de registros: palabra, frecuencia y sección
+rows = []
 for sec in df['seccion'].unique():
     texto = " ".join(df[df['seccion']==sec]['respuesta']).lower()
     tokens = [t for t in nltk.word_tokenize(texto) if t.isalpha() and t not in stop_words]
-    top_por_seccion[sec] = [pal for pal, c in Counter(tokens).most_common(10)]
+    top = Counter(tokens).most_common(5)  # top 15 palabras por sección
+    for palabra, frecuencia in top:
+        rows.append({'seccion': sec, 'palabra': palabra, 'frecuencia': frecuencia})
 
-pd.DataFrame(top_por_seccion).fillna("-").T.style.set_caption("TOP 10 PALABRAS POR SECCIÓN")
+top_df = pd.DataFrame(rows)
+
+# Pivotar: filas = palabras, columnas = secciones
+pivot_df = top_df.pivot_table(
+    values='frecuencia',
+    index='palabra',
+    columns='seccion',
+    fill_value=0
+)
+
+# Ordenar las palabras por su frecuencia total
+pivot_df = pivot_df.loc[pivot_df.sum(axis=1).sort_values(ascending=False).index]
 
 
-# Sentimiento profesional
+nuevas_etiquetas = [
+    'Institucionales',
+    'Conocimiento',
+    'Auditorias',
+    'Normas ISO',
+    'Mejora y sostenibilidad',
+    'Gestion y control'
+]
 
-#%% ================== 4. SENTIMIENTO PROFESIONAL (TextBlob + VADER español) ==================
+plt.figure(figsize=(12,8))
+sns.heatmap(
+    pivot_df,
+    cmap="YlOrBr",        # Paleta cálida: amarillos → naranjas → marrones
+    linewidths=.9,       # Líneas finas entre celdas
+    linecolor='black',
+    annot=True,           # Muestra los valores
+    fmt='d',              # Enteros
+    cbar_kws={'label': 'Frecuencia'}
+)
+plt.xticks(
+    ticks=range(len(nuevas_etiquetas)),
+    labels=nuevas_etiquetas,
+    rotation=30,
+    ha='right'
+)
+# plt.title("Mapa de calor: palabras más frecuentes por sección", fontsize=14, pad=15)
+plt.xlabel("Sección")
+plt.ylabel("Palabra")
+plt.tight_layout()
+plt.show()
 
-from textblob import TextBlob
-import vaderSentiment_es as vader
 
-analyzer = vader.SentimentIntensityAnalyzer()
 
-def sentimiento_avanzado(texto):
-    blob = TextBlob(texto)
-    vader_score = analyzer.polarity_scores(texto)['compound']
-    return pd.Series([blob.sentiment.polarity, blob.sentiment.subjectivity, vader_score])
-
-df[['sent_textblob', 'subjetividad', 'sent_vader']] = df['respuesta'].apply(sentimiento_avanzado)
-
-# Gráfico comparativo
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
-df.groupby('seccion')['sent_vader'].mean().sort_values().plot(kind='barh', ax=ax1, color='coral')
-ax1.set_title("Sentimiento VADER por sección")
-df.groupby('seccion')['subjetividad'].mean().sort_values().plot(kind='barh', ax=ax2, color='orchid')
-ax2.set_title("Subjetividad por sección")
-plt.tight_layout(); plt.show()
-
-# Longitud de respuestas por seccion
-
-#%% ================== 8. BOXPLOT: LONGITUD DE RESPUESTAS POR SECCIÓN ==================
-plt.figure(figsize=(12, 6))
-sns.boxplot(x='longitud', y='seccion', data=df, palette="Set3")
-plt.title("Distribución de longitud de respuestas por sección")
-plt.xlabel("Número de palabras")
-plt.tight_layout(); plt.show()
 
 
