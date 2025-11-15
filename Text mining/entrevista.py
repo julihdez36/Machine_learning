@@ -63,7 +63,7 @@ stop_words = set(stopwords.words('spanish'))
 
 muletillas = ['pues', 'digamos', 'ejemplo', 'entonces', 'bueno', 'después', 'ahorita','chicos',
               'daniel','decir','gracias','ser','si','obviamente','cada','aquí','siempre','cosas',
-              'entreguemos','pone','prestado','pido','veces', 'digamis','ahorita','diré']
+              'entreguemos','pone','prestado','pido','veces', 'digamos','ahorita','diré','primero']
 stop_words.update(muletillas)
 
 
@@ -183,8 +183,8 @@ sns.heatmap(
     cmap="YlOrBr",        # Paleta cálida: amarillos → naranjas → marrones
     linewidths=.9,       # Líneas finas entre celdas
     linecolor='black',
-    annot=True,           # Muestra los valores
-    fmt='d',              # Enteros
+    # annot=True,           # Muestra los valores
+    # fmt='d',              # Enteros
     cbar_kws={'label': 'Frecuencia'}
 )
 plt.xticks(
@@ -193,11 +193,75 @@ plt.xticks(
     rotation=30,
     ha='right'
 )
+plt.yticks(fontsize = 14)
 # plt.title("Mapa de calor: palabras más frecuentes por sección", fontsize=14, pad=15)
-plt.xlabel("Sección")
-plt.ylabel("Palabra")
+plt.xlabel("Sección", fontsize = 16)
+plt.ylabel("Palabra", fontsize = 16)
 plt.tight_layout()
 plt.show()
+
+#%% N gramas
+
+from nltk import word_tokenize
+from nltk.util import ngrams
+
+# Elegir n (2 para bigramas, 3 para trigramas, etc.)
+n = 2  # bigramas
+
+# Crear función para limpiar y tokenizar cada respuesta
+def tokenize_text(text):
+    tokens = word_tokenize(text.lower(), language='spanish')
+    tokens = [t for t in tokens if t.isalpha() and t not in stop_words]
+    return tokens
+
+# DataFrame para guardar los n-gramas por sección
+section_ngrams = {}
+
+for section in df['seccion'].unique():
+    # Unir todas las respuestas de la sección
+    text_section = ' '.join(df.loc[df['seccion'] == section, 'respuesta'])
+    tokens = tokenize_text(text_section)
+    
+    # Generar n-gramas
+    n_grams = list(ngrams(tokens, n))
+    
+    # Contar frecuencias
+    freq = Counter(n_grams)
+    section_ngrams[section] = freq
+
+#%% Visualización: Top 10 n-gramas por sección
+
+
+
+# Secciones que vamos a graficar
+sections_to_plot = [s for s in section_ngrams.keys() if s not in [
+    'Normas de calidad y preservación digital (ISO 9001 e ISO 14721)',
+    'Capacidades institucionales y formación']]
+
+top_n = 5
+
+# Crear figura y ejes (2 filas x 2 columnas para 4 secciones)
+fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+axes = axes.flatten()
+
+for i, section in enumerate(sections_to_plot):
+    freq = section_ngrams[section]
+    most_common = freq.most_common(top_n)
+    ngrams_labels = [' '.join(t) for t, _ in most_common]
+    counts = [c for _, c in most_common]
+    
+    axes[i].barh(ngrams_labels[::-1], counts[::-1], color='skyblue')
+    axes[i].set_title(section, fontsize=12)
+    axes[i].set_xlabel('Frecuencia')
+    axes[i].tick_params(axis='y', labelsize=10)
+
+plt.tight_layout()
+plt.show()
+
+# Ver nombres únicos de las secciones
+print(df['seccion'].unique())
+
+
 
 
 
