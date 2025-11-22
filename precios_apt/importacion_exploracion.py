@@ -293,9 +293,44 @@ for i in lista:
 
 df['deportivas'] = ( df['jacuzzi'] + df['gimnasio'] + df['piscina'] > 0).astype(int)
 
+# Los nan de administración volvamoslo 0
+
+df['administracion'] = df['administracion'].fillna(0)
+
+# Codificación de variables cualitativas ordinales
+
+df.antiguedad.value_counts()
+
+mapping = {
+    'MAS DE 20 ANOS': 25,
+    'ENTRE 10 Y 20 ANOS': 15,
+    'ENTRE 5 Y 10 ANOS': 7.5,
+    'ENTRE 0 Y 5 ANOS': 2.5,
+    'REMODELADO': 10,
+    'EN CONSTRUCCION': 0.5,
+    'SOBRE PLANOS': 0,
+    'PARA ESTRENAR': 0
+}
+# Reemplazar los valores raros
+
+df['antiguedad'] = df['antiguedad'].replace(mapping)
+
+# Eliminar registros con '$numberDouble': 'NaN'
+df = df[df['antiguedad'] != {'$numberDouble': 'NaN'}]
+
+# Volver flotante
+
+df['antiguedad'] = pd.to_numeric(df['antiguedad'], errors= 'coerce')
+
+# Conjunto y vigilancia
+
+pd.to_boo
+
+df['conjunto_cerrado'] = pd.to_numeric(df['conjunto_cerrado'], errors = 'coerce')
+df['vigilancia'] = pd.to_numeric(df['vigilancia'], errors = 'coerce')
 
 
-# Falta revisar antiguedad, zona_bogota, administracion
+df.dropna(inplace = True)
 
 #%% Especificación del modelo de regresión lineal
 
@@ -311,33 +346,73 @@ X.zona_bogota.value_counts()
 
 X = pd.get_dummies(X, columns = ['zona_bogota']) # dummie
 
-# Codificación de variables cualitativas ordinales
+X.info()
 
 X.antiguedad.value_counts()
 
-mapping = {
-    'MAS DE 20 ANOS': 25,
-    'ENTRE 10 Y 20 ANOS': 15,
-    'ENTRE 5 Y 10 ANOS': 7.5,
-    'ENTRE 0 Y 5 ANOS': 2.5,
-    'REMODELADO': 10,
-    'EN CONSTRUCCION': 0.5,
-    'SOBRE PLANOS': 0,
-    'PARA ESTRENAR': 0
-}
-
-# Reemplazar los valores raros
-X['antiguedad'] = X['antiguedad'].replace(mapping)
-
-# Eliminar registros con '$numberDouble': 'NaN'
-X = X[X['antiguedad'] != {'$numberDouble': 'NaN'}]
-
-
-# Los nan de administración volvamoslo 0
-
-X['administracion'] = X['administracion'].fillna(0)
-
+X.info()
 X.isna().sum()
 
-X.dropna(inplace = True)
+#%% Estimación del modelo
+
+import statsmodels.api as sm
+
+# Identificar las columnas booleanas
+bool_cols = X.select_dtypes(include='bool').columns
+
+# Convertirlas a int (True -> 1, False -> 0)
+X[bool_cols] = X[bool_cols].astype(int)
+
+# Agregar una constante (intercepto)
+X_const = sm.add_constant(X)
+X_const.info()
+
+# Ajustar el modelo
+modelo = sm.OLS(y, X_const).fit()
+
+# Ver resumen completo
+print(modelo.summary())
+
+
+#%% Evaluación
+
+# Predicciones vs valores reales
+
+y_pred = modelo.fittedvalues  # predicciones
+plt.scatter(y, y_pred, alpha=0.5)
+plt.plot([y.min(), y.max()], [y.min(), y.max()], "r--")
+plt.xlabel("Valores reales")
+plt.ylabel("Predicciones")
+plt.title("Predicciones vs Valores Reales")
+plt.show()
+
+
+# Residuos vs predicciones
+
+residuals = modelo.resid  # residuos
+
+plt.scatter(y_pred, residuals, alpha=0.5)
+plt.axhline(0, color='red', linestyle='--')
+plt.xlabel("Predicciones")
+plt.ylabel("Residuos")
+plt.title("Residuos vs Predicciones")
+plt.show()
+
+# Histograma de residuos
+
+plt.hist(residuals, bins=30, edgecolor='k')
+plt.xlabel("Residuos")
+plt.ylabel("Frecuencia")
+plt.title("Distribución de Residuos")
+plt.show()
+
+
+# qq-plot (normalidad de residuos)
+
+sm.qqplot(residuals, line='45')
+plt.title("QQ-Plot de residuos")
+plt.show()
+
+sm.graphics.plot_regress_exog(modelo, "area")  # ejemplo para la variable 'area'
+
 
