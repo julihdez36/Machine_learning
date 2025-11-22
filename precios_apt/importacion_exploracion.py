@@ -158,7 +158,7 @@ plt.figure(figsize= (9,4))
 sns.boxplot(data = df, y = 'precio_venta', x = 'estrato', 
             palette= 'viridis')
 plt.title('Precio de apartamentos por localidad')
-plt.xlabel('Localidades')
+plt.xlabel('Estrato')
 plt.ylabel('Precio de venta')
 plt.xticks(rotation = 50, fontsize = 8)
 plt.tight_layout()
@@ -291,9 +291,13 @@ lista = ['jacuzzi',  'gimnasio', 'piscina']
 for i in lista:
     df[i] = pd.to_numeric(df[i], errors= 'coerce')
 
-# Luego se aplica la condición (vectorizada) para crear la columna binaria
 df['deportivas'] = ( df['jacuzzi'] + df['gimnasio'] + df['piscina'] > 0).astype(int)
 
+
+
+# Falta revisar antiguedad, zona_bogota, administracion
+
+#%% Especificación del modelo de regresión lineal
 
 y = df['precio_venta']
 
@@ -301,7 +305,39 @@ X = df[['area', 'habitaciones','banos', 'administracion','parqueaderos',
        'estrato', 'conjunto_cerrado', 'vigilancia','distancia_estacion_tm_m',
        'distancia_parque_m', 'zona_bogota', 'deportivas','antiguedad']]
 
+# One-hot encoding para dummizar variables cualitativas nominales
 
-# Falta revisar antiguedad, zona_bogota, administracion
+X.zona_bogota.value_counts()
 
-#%% Estimación del modelo de regresión lineal
+X = pd.get_dummies(X, columns = ['zona_bogota']) # dummie
+
+# Codificación de variables cualitativas ordinales
+
+X.antiguedad.value_counts()
+
+mapping = {
+    'MAS DE 20 ANOS': 25,
+    'ENTRE 10 Y 20 ANOS': 15,
+    'ENTRE 5 Y 10 ANOS': 7.5,
+    'ENTRE 0 Y 5 ANOS': 2.5,
+    'REMODELADO': 10,
+    'EN CONSTRUCCION': 0.5,
+    'SOBRE PLANOS': 0,
+    'PARA ESTRENAR': 0
+}
+
+# Reemplazar los valores raros
+X['antiguedad'] = X['antiguedad'].replace(mapping)
+
+# Eliminar registros con '$numberDouble': 'NaN'
+X = X[X['antiguedad'] != {'$numberDouble': 'NaN'}]
+
+
+# Los nan de administración volvamoslo 0
+
+X['administracion'] = X['administracion'].fillna(0)
+
+X.isna().sum()
+
+X.dropna(inplace = True)
+
