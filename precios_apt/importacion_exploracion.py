@@ -324,8 +324,6 @@ df['antiguedad'] = pd.to_numeric(df['antiguedad'], errors= 'coerce')
 
 # Conjunto y vigilancia
 
-pd.to_boo
-
 df['conjunto_cerrado'] = pd.to_numeric(df['conjunto_cerrado'], errors = 'coerce')
 df['vigilancia'] = pd.to_numeric(df['vigilancia'], errors = 'coerce')
 
@@ -357,6 +355,8 @@ X.isna().sum()
 
 import statsmodels.api as sm
 
+# Primer modelo
+
 # Identificar las columnas booleanas
 bool_cols = X.select_dtypes(include='bool').columns
 
@@ -373,6 +373,20 @@ modelo = sm.OLS(y, X_const).fit()
 # Ver resumen completo
 print(modelo.summary())
 
+
+# Modelo log - lin
+
+y_log = np.log(y)
+
+modelo2 = sm.OLS(y_log, X_const).fit()
+
+print(modelo2.summary())
+
+X_log = np.log(X_const)
+
+modelo3 = sm.OLS(y_log, X_log).fit()
+
+print(modelo2.summary())
 
 #%% Evaluación
 
