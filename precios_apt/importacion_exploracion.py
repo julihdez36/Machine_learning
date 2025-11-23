@@ -318,7 +318,7 @@ df['antiguedad'] = df['antiguedad'].replace(mapping)
 # Eliminar registros con '$numberDouble': 'NaN'
 df = df[df['antiguedad'] != {'$numberDouble': 'NaN'}]
 
-# Volver flotante
+# Volver integer
 
 df['antiguedad'] = pd.to_numeric(df['antiguedad'], errors= 'coerce')
 
@@ -383,10 +383,11 @@ modelo2 = sm.OLS(y_log, X_const).fit()
 print(modelo2.summary())
 
 X_log = np.log(X_const)
+X_log.replace(-np.inf,0, inplace = True)
 
 modelo3 = sm.OLS(y_log, X_log).fit()
 
-print(modelo2.summary())
+print(modelo3.summary())
 
 #%% Evaluación
 
